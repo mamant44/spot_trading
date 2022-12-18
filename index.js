@@ -1,16 +1,31 @@
 require("dotenv").config()
-const ccxt = require("ccxt")
-const axios = require("axios")
+const { Spot } = require('@binance/connector')
 
-console.log(process.env.SECRET_KEY)
+// TODO: Will implement sell config
+const SALE_CONFIG = {
+    symbol: 'BTCUSDT',
+    side: 'SELL',
+    type: 'LIMIT',
+    timeInForce: 'GTC',
+    quantity: 15,
+    price: 40.60
+}
+
+// TODO: Will implement buy config
+const BUY_CONFIG = {
+    symbol: 'USDTUAH',
+    side: 'BUY',
+    type: 'LIMIT',
+    timeInForce: 'GTC',
+    quantity: 15,
+    price: 39.77
+}
 
 const run = () => {
-    const binanceClient = new ccxt.binance({
-        apiKey: process.env.API_KEY,
-        secret: process.env.SECRET_KEY
-    })
+    const client = new Spot(process.env.API_KEY, process.env.SECRET_KEY)
 
-    console.log({binanceClient})
+    const response = client.newOrder(BUY_CONFIG)
+    console.log(response)
 }
 
 run()
