@@ -1,31 +1,75 @@
 require("dotenv").config()
-const { Spot } = require('@binance/connector')
+const {Spot} = require('@binance/connector');
 
-// TODO: Will implement sell config
-const SALE_CONFIG = {
-    symbol: 'BTCUSDT',
-    side: 'SELL',
-    type: 'LIMIT',
-    timeInForce: 'GTC',
-    quantity: 15,
-    price: 40.60
+const workEnv = [process.env.API_KEY, process.env.SECRET_KEY]
+
+const fetchCurrentPrice = () => {
+    const client = new Spot([...workEnv])
+
+    client.aggTrades('USDTUAH', {limit: 50})
+        .then(response => client.logger.log(response.data))
+        .catch(error => client.logger.error(error.message))
 }
 
-// TODO: Will implement buy config
-const BUY_CONFIG = {
-    symbol: 'USDTUAH',
-    side: 'BUY',
-    type: 'LIMIT',
-    timeInForce: 'GTC',
-    quantity: 15,
-    price: 39.77
+fetchCurrentPrice()
+
+const createBuyOrder = () => {
+    const client = new Spot(...workEnv)
+
+    client.newOrder('USDTUAH', 'BUY', 'MARKET', {
+        quantity: 11,
+    }).then(response => client.logger.log(response.data))
+        .catch(error => client.logger.error(error))
 }
 
-const run = () => {
-    const client = new Spot(process.env.API_KEY, process.env.SECRET_KEY)
+createBuyOrder()
 
-    const response = client.newOrder(BUY_CONFIG)
-    console.log(response)
+const createSellOrder = () => {
+    const client = new Spot(...workEnv)
+
+    client.newOrder('USDTUAH', 'SELL', 'MARKET', {
+        quantity: 11,
+    }).then(response => console.log(response.data))
+        .catch(error => console.log(error))
 }
 
-run()
+createSellOrder()
+
+
+const TRAILING_CELL_PERCENT = 0.1;
+
+const trade = () => {
+    let higherPrice = 0;
+
+    setInterval(() => {
+
+        createSellOrder();
+
+        const price = fetchCurrentPrice;
+
+        if (price > higherPrice) {
+            higherPrice = price
+        }
+
+        if (higherPrice + (higherPrice * (TRAILING_CELL_PERCENT / 100)) > price) {
+            createBuyOrder()
+        }
+    }, 100)
+}
+
+trade()
+
+// K_LINE_DATA.forEach(priceInfo => {
+//     const price = getTestCurrentPrice(priceInfo.p)
+//
+//     if (price > higherPrice) {
+//         higherPrice = price
+//     }
+//
+//     if (higherPrice - (higherPrice * (TRAILING_CELL_PERCENT / 100)) <= price) {
+//         createSellOrder()
+//     }
+//
+//     console.log(price)
+//     console.log(higherPrice)
+// })
